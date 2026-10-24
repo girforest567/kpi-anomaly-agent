@@ -6,14 +6,14 @@ def weekday_factors(series):
     """How strong each weekday normally is, e.g. Saturday = 1.25."""
     weekly_avg = series.rolling(7, center=True, min_periods=4).mean()
     ratio = series / weekly_avg
-    return ratio.groupby(series.index.dayofweek).median()
+    return ratio.groupby(series.index.day_of_week).median()
 
 
 def detect_metric(series, window=28, warn_z=3.0, crit_z=4.0, min_pct=0.10):
     """Return a DataFrame of anomalous days for ONE metric (a daily Series)."""
     # 1. remove the weekly pattern
     factors = weekday_factors(series)
-    factor_per_day = pd.Series([factors[d] for d in series.index.dayofweek], index=series.index)
+    factor_per_day = pd.Series([factors[d] for d in series.index.day_of_week], index=series.index)
     adjusted = series / factor_per_day
 
     # 2. baseline from the PREVIOUS days only (shift(1))
