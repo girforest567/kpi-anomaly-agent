@@ -104,3 +104,30 @@ def send_alert(items, daily, cfg, out_dir="outputs"):
         server.send_message(msg)
     print(f"[notify] email sent to {recipients}")
     return True
+
+def smtp_configured():
+    """True if email credentials are available in the environment."""
+    return bool(os.getenv("SMTP_USER") and os.getenv("SMTP_PASSWORD"))
+
+
+def send_failure(error_text, cfg):
+    """Email a 'pipeline failed' notice. Without credentials, just print it."""
+    if not smtp_configured():
+        print(f"[notify] PIPELINE FAILED (no SMTP configured, not emailed): {error_text}")
+        return False
+    user = os.getenv("SMTP_USER")
+    recipients = os.getenv("ALERT_RECIPIENTS", ",".join(cfg["email"]["recipients"]))
+    msg = EmailMessage()
+    msg["Subject"] = f"{cfg['email']['subject_prefix']} PIPELINE FAILED"
+    msg["From"] = os.getenv("EMAIL_FROM", user)
+    msg["To"] = recipients
+    msg.set_content(f"The KPI anomaly agent failed:\n\n{error_text}")
+    host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_class = smtplib.SMTP_SSL if port == 465 else smtplib.SMTP
+    with smtp_class(host, port) as server:
+        if port != 465:
+            server.starttls()
+        server.login(user, os.getenv("SMTP_PASSWORD"))
+        server.send_message(msg)
+    return True

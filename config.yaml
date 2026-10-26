@@ -1,0 +1,19 @@
+data_path: data/sales.xlsx
+metrics: [sales, profit, orders]
+
+detection:
+  window: 28          # days of history used as the baseline
+  warn_z: 3.0         # |z| >= 3  -> warning
+  crit_z: 4.0         # |z| >= 4  -> critical
+  min_pct: 0.10       # ignore moves smaller than 10%
+
+lookback_days: 3        # only alert on anomalies from the last N days
+max_alerts_per_email: 5
+
+llm:
+  enabled: true         # uses Claude if ANTHROPIC_API_KEY is set, else a template
+  model: claude-sonnet-5-5
+
+email:
+  recipients: ["girforest1336@gmail.com"]     # ALERT_RECIPIENTS env var overrides this
+  subject_prefix: "[KPI Alert]"
